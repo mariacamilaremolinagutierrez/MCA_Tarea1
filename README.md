@@ -1,4 +1,4 @@
-# MCA_Tarea1
+# MCA Tarea1
 
 Repositorio para realizar a Tarea 1 de Métodos Computacionales Avanzados. 
 
