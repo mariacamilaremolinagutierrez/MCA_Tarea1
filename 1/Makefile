@@ -1,3 +1,6 @@
-all:
-	gcc shocktube.c ./steps.c ./riemann.c -lm -o shocktube.x
+all: plots.py
+	python plots.py
+
+plots.py: shocktube.c
+	gcc shocktube.c -lm -o shocktube.x
 	./shocktube.x
