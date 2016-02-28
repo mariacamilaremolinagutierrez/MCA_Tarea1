@@ -23,26 +23,26 @@ int main()
 
 void solve(solver stepAlgorithm, double tMax, char *filename, int plots)
 {
-    initialize();
+  initialize();
 
-    double t = 0.0;
-    int step = 0;
-    int plot = 0;
-    FILE *out;
-    char filename_tmp[1024];
-    int j;
-    double rho_avg = 0.0, u_avg = 0.0, e_avg = 0.0, P_avg = 0.0;
-    double rho, u, e, P;
+  double t = 0.0;
+  int step = 0;
+  int plot = 0;
+  FILE *out;
+  char filename_tmp[1024];
+  int j;
+  double rho_avg = 0.0, u_avg = 0.0, e_avg = 0.0, P_avg = 0.0;
+  double rho, u, e, P;
 
-    tau = CFL * h / cMax();
+  tau = CFL * h / cMax();
 
-    while(plot<=plots) {
+  while(plot<=plots) {
 
-      sprintf(filename_tmp, "%s_step_%d.dat", filename, plot);
+    sprintf(filename_tmp, "%s_step_%d.dat", filename, plot);
 
-      if(!(out = fopen(filename_tmp, "w"))){
-      	fprintf(stderr, "problem opening file %s\n", filename);
-      	exit(1);
+    if(!(out = fopen(filename_tmp, "w"))){
+    	fprintf(stderr, "problem opening file %s\n", filename);
+    	exit(1);
     }
 
     // write solution in plot files and print
@@ -52,12 +52,12 @@ void solve(solver stepAlgorithm, double tMax, char *filename, int plots)
     	rho = U[j][0];
     	u = U[j][1] / U[j][0];
     	e = U[j][2];
-    	P = (U[j][2] - U[j][1] * U[j][1] / U[j][0] / 2)
-    	  * (gama - 1.0);
+    	P = (U[j][2] - U[j][1] * U[j][1] / U[j][0] / 2) * (gama - 1.0);
     	rho_avg += rho;
     	u_avg += u;
     	e_avg += e;
     	P_avg += P;
+
     	fprintf(out, "%d\t%f\t%f\t%f\t%f\n", j, rho, u, e, P);
     }
 

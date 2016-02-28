@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include "steps.h"
+#include "riemann.h"
 
 /*
   C adaptation from C++ code written by Richard J. Gonsalves.
 */
-
 
 double L = 4.0;                   // length of shock tube
 double gama = 1.4;                // ratio of specific heats
@@ -17,7 +17,6 @@ double nu = 0.0;                  // artificial viscosity coefficient
 double **U = NULL;                // solution with 3 components
 double **newU = NULL;             // new solution
 double **F = NULL;                // flux with 3 components
-double *vol = NULL;               // for Roe solver
 
 double h;                         // lattice spacing
 double tau;                       // time step
@@ -32,7 +31,6 @@ void allocate() {
   U = malloc(N * sizeof(double *));
   newU = malloc(N * sizeof(double *));
   F = malloc(N * sizeof(double *));
-  vol = malloc(N * sizeof(double *));
 
   for (j = 0; j < N; j++) {
     U[j] = malloc(3 * sizeof(double));
@@ -61,7 +59,6 @@ void initialize() {
     U[j][0] = rho;
     U[j][1] = rho * u;
     U[j][2] = e;
-    vol[j] = 1;
   }
 
   tau = CFL * h / cMax();
@@ -102,12 +99,13 @@ void boundaryConditions(double **U) {
   U[N - 1][2] = U[N - 2][2];
 }
 
+
 void upwindGodunovStep() {
   int i, j;
   // find fluxes using Riemann solver
 
   for (j = 0; j < N - 1; j++){
-        Riemann(U[j], U[j + 1], F[j]);
+    Riemann(U[j], U[j + 1], F[j]);
   }
 
   // update U
@@ -115,38 +113,6 @@ void upwindGodunovStep() {
     for (i = 0; i < 3; i++){
       U[j][i] -= tau / h * (F[j][i] - F[j - 1][i]);
     }
-  }
-}
-
-void LaxFriedrichsStep() {
-
-  int i, j;
-  double rho, u, e, p;
-
-  // compute flux F from U
-  for (j = 0; j < N; j++) {
-    rho = U[j][0];
-    u = U[j][1]/U[j][0];
-    e = U[j][2];
-    p = (gama - 1) * (e - rho * u * u/ 2);
-
-    F[j][0] = rho * u;
-    F[j][1] = rho * u * u + p;
-    F[j][2] = (e + p) * u;
-  }
-
-  // Lax-Friedrichs step
-  for (j = 1; j < N - 1; j++)
-    for (i = 0; i < 3; i++){
-       newU[j][i] = (U[j + 1][i] + U[j - 1][i]) / 2 - tau / h * (F[j + 1][i] - F[j - 1][i]);
-    }
-
-  boundaryConditions(newU);
-
-  // update U from newU
-  for (j = 1; j < N - 1; j++)
-    for (i = 0; i < 3; i++){
-       U[j][i] = newU[j][i];
   }
 }
 
