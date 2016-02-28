@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "riemann.h"
+
 /* Punto 1:
 Escriba un código en C que resuelva el problema del shock-tube con
 un esquema de Godunov de primer orden. Utilice las mismas variables que
@@ -13,14 +15,14 @@ Based on Godunov's explanation here: http://www.physics.buffalo.edu/phy411-506/t
 (Specially pages 1-9)
 */
 
-double L = 4.0;                   // length of shock tube
+double L = 1.0; //4.0;                   // length of shock tube
 double gama = 1.4;                // ratio of specific heats
-int N = 5000;                     // number of grid points
+int N = 200; //5000;                     // number of grid points
 
-double CFL = 0.4;                 // Courant-Friedrichs-Lewy number
-double nu = 0.0;                  // artificial viscosity coefficient
+double CFL = 0.9; //0.4;                 // Courant-Friedrichs-Lewy number
 
 double **U = NULL;                // solution with 3 components
+double **F = NULL;                // flux with 3 components
 
 double h;                         // lattice spacing
 double tau;                       // time step
@@ -37,7 +39,7 @@ void solve(double tMax, char *filename, int plots);
 
 int main()
 {
-  solve(1.0, "UpwindGodunov", 5);
+  solve(0.2, "UpwindGodunov", 1);
 
   return 0;
 }
@@ -47,9 +49,11 @@ void allocate() {
   int j;
 
   U = malloc(N * sizeof(double *));
+  F = malloc(N * sizeof(double *));
 
   for (j = 0; j < N; j++) {
     U[j] = malloc(3 * sizeof(double));
+    F[j] = malloc(3 * sizeof(double));
   }
 }
 
@@ -98,13 +102,15 @@ void initialize() {
     e = p/(gama-1) + rho*u*u/2.0;
 
     U[j][0] = rho;
-    U[j][1] = rho * u;
+    U[j][1] = rho*u;
     U[j][2] = e;
+
+    F[j][0] = rho*u;
+    F[j][1] = rho*u*u+p;
+    F[j][2] = u*(e+p);
   }
 
-  c = cMax();
-
-  tau = CFL*h/c;
+  tau = CFL*h/cMax();
   step = 0;
 }
 
@@ -120,6 +126,23 @@ void boundaryConditions(double **U) {
 }
 
 void upwindGodunovStep() {
+
+  int i, j;
+
+  // find fluxes using Riemann solver
+  for (j = 0; j < N - 1; j++){
+    Riemann(U[j], U[j + 1], F[j]);
+  }
+
+  // update U
+  for (j = 1; j < N - 1; j++){
+    for (i = 0; i < 3; i++){
+      U[j][i] -= tau/h*(F[j][i] - F[j-1][i]);
+    }
+  }
+}
+
+void upwindGodunovStep_2() {
 
   int i, j;
 
@@ -150,7 +173,7 @@ void solve(double tMax, char *filename, int plots)
 
   double rho, u, e, P;
 
-  tau = CFL*h/c;
+  tau = CFL*h/cMax();
 
   while(plot<=plots) {
 
@@ -165,10 +188,10 @@ void solve(double tMax, char *filename, int plots)
     double rho_avg = 0.0, u_avg = 0.0, e_avg = 0.0, P_avg = 0.0;
 
     for (j = 0; j < N; j++) {
-    	rho = U[j][0];
-    	u = U[j][1] / U[j][0];
-    	e = U[j][2];
-    	P = (U[j][2] - U[j][1] * U[j][1] / U[j][0] / 2) * (gama - 1.0);
+      rho = U[j][0];
+      u = U[j][1]/rho;
+      e = U[j][2];
+      P = (gama-1.0)*(e-rho*u*u/2.0);
 
     	rho_avg += rho;
     	u_avg += u;
@@ -185,29 +208,39 @@ void solve(double tMax, char *filename, int plots)
     if (e_avg != 0.0)   e_avg /= N;
     if (P_avg != 0.0)   P_avg /= N;
 
-    fprintf(stdout,"Step %d Time %f\tRho_avg %f\t u_avg %f\t e_avg %f\t P_avg %f\n", step, t,rho_avg,u_avg,e_avg,P_avg);
+    //fprintf(stdout,"Step %d Time %f\tRho_avg %f\t u_avg %f\t e_avg %f\t P_avg %f\n", step, t,rho_avg,u_avg,e_avg,P_avg);
 
     plot++;
 
+    printf("%f\t%f\n",t,tMax*plot);
+
     while (t < tMax*plot / (double)(plots)) {
     	boundaryConditions(U);
-    	tau = CFL*h/c;
+    	tau = CFL*h/cMax();
       upwindGodunovStep();
     	t += tau;
     	step++;
+      for (j = 0; j < 1; j++) {
+        rho = U[j][0];
+        u = U[j][1]/rho;
+        e = U[j][2];
+        P = (gama-1.0)*(e-rho*u*u/2.0);
+
+        printf("%f\t%.20f\t%.20f\t%.20f\t%.20f\n", t, rho, u, e, P);
+      }
     }
   }
 
-  //File to plot las step
+  //File to plot last step
   FILE *final_step_file;
   final_step_file = fopen("final_step.dat", "w");
   double current_x;
 
   for (j = 0; j < N; j++) {
     rho = U[j][0];
-    u = U[j][1] / U[j][0];
+    u = U[j][1]/rho;
     e = U[j][2];
-    P = (U[j][2] - U[j][1] * U[j][1] / U[j][0] / 2) * (gama - 1.0);
+    P = (gama-1.0)*(e-rho*u*u/2.0);
 
     current_x = j*h;
 
