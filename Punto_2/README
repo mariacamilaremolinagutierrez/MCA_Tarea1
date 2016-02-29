@@ -1,0 +1,27 @@
+Punto 2
+
+NOTAS: El codigo fue implementado de manera correcta. Compila y se ejecuta.
+Sin embargo se ejecuta de la mejor manera. Puede que este mal por las condiciones iniciales. Sin embargo es probable que este mal por alguna otra razon que no se pudo encontrar. Por ello se ofrecen disculpas por esta entrega.
+
+Instrucciones para ejecutar.
+
+make
+
+(mirar el makefile)
+
+Ya mas especificamente:
+
+Para ejecutar (generar los datos):
+
+#OPT puede ser o 1 (Simpletico) o 2 (RungeKutta)
+./Das_Executor.x OPT T_final delta_t a Archivo_Condiciones_Iniciales
+
+Para graficar: 
+python graficar.py #Figura Archivos_Necesarios
+
+A parte, condiciones iniciales
+
+cd ICs
+#OPT puede ser o 1 (Figuras 9,10 y 11) o 2 (Figuras 12,13 y 14) o 3 (figura 15) o 4 (figura 16)
+./ICs_generator.x OPT
+
