@@ -148,8 +148,6 @@ void solve(double tMax)
 
   double t = 0.0;
 
-  int j;
-
   double rho, u, e, P;
 
   tau = CFL*h/cMax();
@@ -163,23 +161,13 @@ void solve(double tMax)
     upwindGodunovStep();
 
   	t += tau;
-
-    // rho = U[98][0];
-    // u = U[98][1]/rho;
-    // e = U[98][2];
-    // P = (gama-1.0)*(e-rho*u*u/2.0);
-    // printf("%f\t%.20f\t%.20f\t%.20f\t%.20f\n", t, rho, u, e, P);
-    // rho = U[102][0];
-    // u = U[102][1]/rho;
-    // e = U[102][2];
-    // P = (gama-1.0)*(e-rho*u*u/2.0);
-    // printf("%f\t%.20f\t%.20f\t%.20f\t%.20f\n", t, rho, u, e, P);
   }
 
   //File to plot last step
   FILE *final_step_file;
   final_step_file = fopen("final_step.dat", "w");
   double current_x;
+  int j;
 
   for (j = 0; j < N; j++) {
 

@@ -70,8 +70,6 @@ void Riemann(double *U4, double *U1, double *F) {
 
   s2 = u2;
 
-  //printf("%f,%f,%f,%f\n",p1,p2,p3,p4);
-
   // Compute expansion
   s3 = u3 - a3;
   s4 = u4 - a4;
@@ -80,39 +78,43 @@ void Riemann(double *U4, double *U1, double *F) {
   double f1, f2, f3;
   double a, u, p, rho;
 
-  // double e1, e2, e3, e4;
-  // e1 = p1/(gamma-1)+rho1*u1*u1/2.0;
-  // e2 = p2/(gamma-1)+rho2*u2*u2/2.0;
-  // e3 = p3/(gamma-1)+rho3*u3*u3/2.0;
-  // e4 = p4/(gamma-1)+rho4*u4*u4/2.0;
-
   if(s4 > 0) {
     f1 = rho4*u4;
     f2 = rho4*u4*u4 + p4;
-    f3 = .5*rho4*u4*u4*u4 + rho4*a4*a4*u4/(gamma-1.);
-  } else if (s3 > 0) {
-    u = ((gamma-1.)*u4+2.*a4)/(gamma+1.);
+    f3 = 0.5*rho4*u4*u4*u4 + rho4*a4*a4*u4/(gamma-1.);
+  }
+
+  else if (s3 > 0) {
+    u = ((gamma-1.0)*u4+2.0*a4)/(gamma+1.);
     a = u;
-    p = p4*pow(a/a4, 2.*gamma/(gamma-1.));
+    p = p4*pow(a/a4, 2.0*gamma/(gamma-1.));
+
     if (a < 0 || p < 0) {
       printf("Negative a or p in Riemann");
     }
+
     rho = gamma*p/(a*a);
     f1 = rho*u;
     f2 = rho*u*u + p;
-    f3 = .5*rho*u*u*u + rho*a*a*u/(gamma-1.);
-  } else if (s2 > 0) {
+    f3 = 0.5*rho*u*u*u + rho*a*a*u/(gamma-1.0);
+  }
+
+  else if (s2 > 0) {
     f1 = rho3*u3;
     f2 = rho3*u3*u3 + p3;
-    f3 =  .5*rho3*u3*u3*u3 + rho3*a3*a3*u3/(gamma-1.);
-  } else if (s1 > 0) {
+    f3 =  0.5*rho3*u3*u3*u3 + rho3*a3*a3*u3/(gamma-1.0);
+  }
+
+  else if (s1 > 0) {
     f1 = rho2*u2;
     f2 = rho2*u2*u2 + p2;
-    f3 = .5*rho2*u2*u2*u2 + rho2*a2*a2*u2/(gamma-1.);
-  } else {
+    f3 = 0.5*rho2*u2*u2*u2 + rho2*a2*a2*u2/(gamma-1.0);
+  }
+
+  else {
     f1 = rho1*u1;
     f2 = rho1*u1*u1 + p1;
-    f3 = .5*rho1*u1*u1*u1 + rho1*a1*a1*u1/(gamma-1.);
+    f3 = 0.5*rho1*u1*u1*u1 + rho1*a1*a1*u1/(gamma-1.0);
   }
 
   F[0] = f1;
