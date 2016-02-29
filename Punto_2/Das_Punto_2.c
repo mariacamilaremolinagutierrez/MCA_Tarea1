@@ -64,10 +64,12 @@ int main(int argc, char **argv){
   }
   //La primera linea del archivo indica el numero de condiciones que se van a utilizar.
   fscanf(IC_masa_3, "%d \n", &n_condiciones);
+
   int i;
   for(i=0;i<n_condiciones;i++){
     double q_3_0, p_3_0;
     fscanf(IC_masa_3, "%lf \t %lf\n", &q_3_0, &p_3_0);
+    
     //Mira si se va a ejecutar el Simpletico o el RK4
     if(opcion == OPT_SIMPLETIC){
       Simpletic_Integration(big_T, delta_t, epsilon, a, q_3_0, p_3_0);
@@ -108,11 +110,14 @@ void RK4(double big_T, double delta_t, double epsilon, double a, double q_3_0, d
 
   //Condiciones Iniciales
   //Todo - Aun falta como hacerlo. Lo mas practico probablemente sera traerlas desde un archivo.
-  //Por ahora sigamos las del paper para la masa 1 (a,0) y pongamos la masa 3 en (0,0)
+  //Por ahora sigamos las del paper para la masa 1 (a,0) y pongamos la masa 3 por ahi
   q_1[0] = a;
   p_1[0] = 0.0;
   q_3[0] = q_3_0;
   p_3[0] = p_3_0;
+  energia[0] = hamiltoniano_t(q_1[0], p_1[0], q_3[0], p_3[0], epsilon);
+  //printf("%s \n", "Primera");
+  //printf("%f %f %f %f %f\n", q_1[0], p_1[0], q_3[0], p_3[0], energia[0]);
 
   //Primera iteracion
   double*results_1_0;
@@ -125,7 +130,7 @@ void RK4(double big_T, double delta_t, double epsilon, double a, double q_3_0, d
   p_3[1] = results_3_0[1];
   t[1] = delta_t;
   energia[1] = hamiltoniano_t(q_1[1], p_1[1], q_3[1], p_3[1], epsilon);
-
+  //printf("%f %f %f %f %f\n", q_1[1], p_1[1], q_3[1], p_3[1], energia[1]);
   int i;
 
   for(i = 1; i<n_step;i++){
@@ -240,7 +245,7 @@ void escribirArreglos_RK4(double*t, double*q_1, double*q_3, double*p_1, double*p
     //Aca verifica que valga la pena escribir el resto de puntos
     //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
     
-    if(p_1[i]==0 || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
+    if((p_1[i]==0) || (p_1[i-1]<0.0 && p_1[i]>0.0) || (p_1[i]<0.0 && p_1[i-1]>0.0) ){
       fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
       
     }    
@@ -287,7 +292,7 @@ void Simpletic_Integration(double big_T, double delta_t, double epsilon, double 
   p_1[0] = 0.0;
   q_3[0] = q_3_0;
   p_3[0] = p_3_0;
-
+  energia[0] = hamiltoniano_t(q_1[0], p_1[0], q_3[0], p_3[0], epsilon);
   //Primera iteracion
   double*results_0;
   results_0 = Simpletic_Integration_step( alpha_1, alpha_0, q_1[0], p_1[0], q_3[0], p_3[0], epsilon);
@@ -510,11 +515,13 @@ void escribirArreglos_simpletico(double*t, double*q_1, double*q_3, double*p_1, d
      fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[0], q_3[0], p_3[0], energia[0]);
    }
   for(i=1;i<n_step;i++){
-    //Aca verifica que valga la pena escribir el resto de puntos
-    //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
-    if(p_1[i]==0 || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
-      fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
-    }    
+    if(!(q_3[i]==q_3[i-1] && p_3[i]==p_3[i-1] && energia[i] == energia[i-1])){
+      //Aca verifica que valga la pena escribir el resto de puntos
+      //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
+      if((p_1[i]==0) || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
+	fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
+      }
+    }
   }
   // fclose(archivo);
 }
