@@ -52,7 +52,6 @@ x4 = x0 + u_shock*tMax
 x_a = np.zeros(N)
 rho_a = np.zeros(N)
 u_a = np.zeros(N)
-e_a = np.zeros(N)
 P_a = np.zeros(N)
 
 current_x = 0.0
@@ -91,7 +90,6 @@ for i in range(0,N):
     rho_a[i] = rr
     u_a[i] = uu
     P_a[i] = PP
-    e_a[i] = ee
 
     current_x += dx
 
@@ -105,7 +103,6 @@ os.system('mkdir Graficas/')
 x = data[:,0]
 rho = data[:,1]
 u = data[:,2]
-e = data[:,3]
 P = data[:,4]
 
 fig = plt.figure(figsize=(16,8))
@@ -125,15 +122,6 @@ plt.xlabel('$\mathrm{x}$')
 plt.ylabel('$\mathrm{Velocity}$')
 plt.legend(fontsize=20, loc='best')
 plt.savefig('Graficas/velocity.png')
-
-fig = plt.figure(figsize=(16,8))
-plt.plot(x,e,label="$\mathrm{Godunov\'s\;Scheme}$")
-plt.plot(x_a,e_a,label="$\mathrm{Analytic}$")
-#plt.ylim(-0,2.7)
-plt.xlabel('$\mathrm{x}$')
-plt.ylabel('$\mathrm{Energy\;per\;unit\;lenghth}$')
-plt.legend(fontsize=20, loc='best')
-plt.savefig('Graficas/energyperunitlength.png')
 
 fig = plt.figure(figsize=(16,8))
 plt.plot(x,P,label="$\mathrm{Godunov\'s\;Scheme}$")
