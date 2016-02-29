@@ -67,7 +67,7 @@ int main(int argc, char **argv){
   int i;
   for(i=0;i<n_condiciones;i++){
     double q_3_0, p_3_0;
-    fscanf(IC_masa_3, "%lf %lf\n", &q_3_0, &p_3_0);
+    fscanf(IC_masa_3, "%lf \t %lf\n", &q_3_0, &p_3_0);
     //Mira si se va a ejecutar el Simpletico o el RK4
     if(opcion == OPT_SIMPLETIC){
       Simpletic_Integration(big_T, delta_t, epsilon, a, q_3_0, p_3_0);
@@ -125,19 +125,18 @@ void RK4(double big_T, double delta_t, double epsilon, double a, double q_3_0, d
   p_3[1] = results_3_0[1];
   t[1] = delta_t;
   energia[1] = hamiltoniano_t(q_1[1], p_1[1], q_3[1], p_3[1], epsilon);
-  //RK4
 
   int i;
 
   for(i = 1; i<n_step;i++){
-    double*results_1_0;
-    double*results_3_0;
-    results_1_0 = RK4_step_1(delta_t, q_1[i-1], p_1[i-1], q_3[i-1], p_3[i-1], epsilon);
-    results_3_0 = RK4_step_3(delta_t, q_1[i-1], p_1[i-1], q_3[i-1], p_3[i-1], epsilon);
-    q_1[i] = results_1_0[0];
-    p_1[i] = results_1_0[1];
-    q_3[i] = results_3_0[0];
-    p_3[i] = results_3_0[1];
+    double*results_1;
+    double*results_3;
+    results_1 = RK4_step_1(delta_t, q_1[i-1], p_1[i-1], q_3[i-1], p_3[i-1], epsilon);
+    results_3 = RK4_step_3(delta_t, q_1[i-1], p_1[i-1], q_3[i-1], p_3[i-1], epsilon);
+    q_1[i] = results_1[0];
+    p_1[i] = results_1[1];
+    q_3[i] = results_3[0];
+    p_3[i] = results_3[1];
     t[i] = t[i-1] + delta_t;
     energia[i] = hamiltoniano_t(q_1[i], p_1[i], q_3[i], p_3[i], epsilon);
   }
@@ -226,7 +225,7 @@ void escribirArreglos_RK4(double*t, double*q_1, double*q_3, double*p_1, double*p
   int i;
   sprintf(bufX, "%f", q_1[0]);
   char n1[50], n3[50];
-   strcpy(n1,  "int_RK4_");
+   strcpy(n1,  "./Outputs/int_RK4_");
    strcpy(n3, ".dat");
    strcat(n1, bufX);
    strcat(n1, n3);
@@ -236,11 +235,14 @@ void escribirArreglos_RK4(double*t, double*q_1, double*q_3, double*p_1, double*p
    if(p_1[0]==0){
      fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[0], q_3[0], p_3[0], energia[0]);
    }
+  
   for(i=1;i<n_step;i++){
     //Aca verifica que valga la pena escribir el resto de puntos
     //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
+    
     if(p_1[i]==0 || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
       fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
+      
     }    
   }
   //fclose(archivo);
@@ -481,6 +483,42 @@ double* gamma_A_3 (double alpha, double q_1, double q_3, double p, double epsilo
   return retorno;
 }
 
+
+/*
+ * Funcion que escribe 4 arreglos TODOS de tamano n_step (dado su tamano).
+ * En el paper nos dicen que solo queremos los puntos q_3 y p_3 cuando p_1 es 0 (o pasa por 0).
+ * Queremos la energia para mostrar conservacion de energia en la ultima grafica
+ * Asi ademas no tenemos que escribir tantas cosas.
+ */
+void escribirArreglos_simpletico(double*t, double*q_1, double*q_3, double*p_1, double*p_3, double* energia, int n_step)
+{
+  FILE* archivo;
+  //Sabemos que solo hay 6 arreglos
+  //Sabemos que la condicion inicial es la posicion inicial de la masa grande, o sea de la masa 1, o sea q1
+  char bufX[20];
+  int i;
+  sprintf(bufX, "%f", q_1[0]);
+  char n1[50], n3[50];
+   strcpy(n1,  "./Outputs/int_simpletico_");
+   strcpy(n3, ".dat");
+   strcat(n1, bufX);
+   strcat(n1, n3);
+   archivo = fopen(n1, "a");
+   //Aca verifica que valga la pena escribir el primer de punto
+   //Verifica si la velocidad de la masa 1 es 0
+   if(p_1[0]==0){
+     fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[0], q_3[0], p_3[0], energia[0]);
+   }
+  for(i=1;i<n_step;i++){
+    //Aca verifica que valga la pena escribir el resto de puntos
+    //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
+    if(p_1[i]==0 || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
+      fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
+    }    
+  }
+  // fclose(archivo);
+}
+
 /*---------------------------------------------------------------------------
  *Funciones que se usan en ambos metodos
  *---------------------------------------------------------------------------
@@ -518,7 +556,7 @@ double p_punto_3(double q_1,double q_3, double epsilon){
   primer_nom = (q_1-q_3);
   primer_denom = pow((square(q_1-q_3)+square(epsilon/2.0)),1.5);
   segundo_nom = (q_1+q_3);
-  segundo_denom = pow((square(q_1-q_3)+square(epsilon/2.0)),1.5);
+  segundo_denom = pow((square(q_1+q_3)+square(epsilon/2.0)),1.5);
   return (primer_nom/primer_denom) - (segundo_nom/segundo_denom);
 }
 
@@ -570,40 +608,6 @@ double*crearArregloCero(int n_points)
   return arregloRespuesta;
 }
 
-/*
- * Funcion que escribe 4 arreglos TODOS de tamano n_step (dado su tamano).
- * En el paper nos dicen que solo queremos los puntos q_3 y p_3 cuando p_1 es 0 (o pasa por 0).
- * Queremos la energia para mostrar conservacion de energia en la ultima grafica
- * Asi ademas no tenemos que escribir tantas cosas.
- */
-void escribirArreglos_simpletico(double*t, double*q_1, double*q_3, double*p_1, double*p_3, double* energia, int n_step)
-{
-  FILE* archivo;
-  //Sabemos que solo hay 6 arreglos
-  //Sabemos que la condicion inicial es la posicion inicial de la masa grande, o sea de la masa 1, o sea q1
-  char bufX[20];
-  int i;
-  sprintf(bufX, "%f", q_1[0]);
-  char n1[50], n3[50];
-   strcpy(n1,  "int_simpletico_");
-   strcpy(n3, ".dat");
-   strcat(n1, bufX);
-   strcat(n1, n3);
-   archivo = fopen(n1, "a");
-   //Aca verifica que valga la pena escribir el primer de punto
-   //Verifica si la velocidad de la masa 1 es 0
-   if(p_1[0]==0){
-     fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[0], q_3[0], p_3[0], energia[0]);
-   }
-  for(i=1;i<n_step;i++){
-    //Aca verifica que valga la pena escribir el resto de puntos
-    //Verifica si la velocidad de la masa 1 es 0 o si acaba de pasar por 0 (o sea si cambio de signo)
-    if(p_1[i]==0 || (p_1[i-1]<0 && p_1[i]>0) || (p_1[i]<0 && p_1[i-1]>0) ){
-      fprintf(archivo, "%f \t %.15e \t %.15e \t %.15e \n", t[i], q_3[i], p_3[i], energia[i]);
-    }    
-  }
-  fclose(archivo);
-}
 
 
 /*---------------------------------------------------------------------------
